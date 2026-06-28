@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catálogo de Socios 2026 – CChC Los Ángeles</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800;900&family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════
+   CATÁLOGO DIGITAL · CChC LOS ÁNGELES
+   Versión dinámica – Lee desde Google Sheets
+   Para cambiar los datos: edita la hoja
+   en SHEET_ID (ver sección CONFIG en JS)
+═══════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#1A3A6B; --dnavy:#0C1F3D; --red:#E84D1C;
+  --celeste:#7AC9D9; --light:#F4F6FA; --mgray:#D5DCE8;
+  --dgray:#4A5568; --white:#fff;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Montserrat',sans-serif;background:#ECEEF2;color:#222}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:200;background:var(--navy);display:flex;align-items:center;justify-content:space-between;padding:13px 36px;box-shadow:0 2px 16px rgba(0,0,0,.35)}
+.nav-logo{display:flex;align-items:center;gap:14px}
+.logo-pill{width:36px;height:36px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#fff;flex-shrink:0}
+.nav-text{color:#fff;font-size:13px;font-weight:700;line-height:1.3}
+.nav-sub{display:block;font-size:9px;font-weight:300;color:rgba(255,255,255,.45);letter-spacing:1.5px;text-transform:uppercase}
+.nav-right{display:flex;align-items:center;gap:10px}
+.nav-search{display:flex;align-items:center;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:6px 14px;gap:8px}
+.nav-search input{background:none;border:none;outline:none;color:#fff;font-size:11px;font-family:'Montserrat',sans-serif;width:160px}
+.nav-search input::placeholder{color:rgba(255,255,255,.45)}
+.btn-view{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:12px;transition:background .15s}
+.btn-view:hover,.btn-view.active{background:var(--red);border-color:var(--red)}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,#060f1f 0%,var(--dnavy) 60%,#183060 100%);min-height:480px;display:grid;grid-template-columns:1fr 1fr;align-items:center;position:relative;overflow:hidden}
+.hero::before{content:'2026';position:absolute;right:-30px;top:-40px;font-size:300px;font-weight:900;color:rgba(255,255,255,.025);line-height:1;pointer-events:none;font-family:'Playfair Display',serif}
+.hero-left{padding:60px 48px 60px 64px;position:relative;z-index:1}
+.eyebrow{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--red);font-weight:700;margin-bottom:18px}
+.hero-left h1{font-family:'Playfair Display',serif;font-size:clamp(30px,4vw,50px);font-weight:900;color:#fff;line-height:1.05;margin-bottom:14px}
+.hero-left h1 em{color:var(--red);font-style:normal}
+.hero-left p{font-size:13px;color:rgba(255,255,255,.5);line-height:1.8;max-width:380px;margin-bottom:28px}
+.hero-search{display:flex;align-items:center;background:#fff;border-radius:4px;overflow:hidden;max-width:440px;box-shadow:0 8px 32px rgba(0,0,0,.3)}
+.hero-search input{flex:1;padding:13px 18px;border:none;outline:none;font-size:13px;font-family:'Montserrat',sans-serif;color:#333}
+.hero-search button{background:var(--red);border:none;color:#fff;padding:13px 22px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;font-family:'Montserrat',sans-serif;transition:background .2s}
+.hero-search button:hover{background:#c73c0c}
+.hero-right{border-left:1px solid rgba(255,255,255,.06);padding:44px;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:center;position:relative;z-index:1}
+.stat-box{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:22px 18px;text-align:center}
+.stat-box .n{font-size:36px;font-weight:900;color:var(--red);line-height:1}
+.stat-box .l{font-size:9px;color:rgba(255,255,255,.4);letter-spacing:1.5px;text-transform:uppercase;margin-top:4px}
+
+/* STRIP */
+.stats-strip{background:#fff;display:flex;justify-content:center;flex-wrap:wrap;border-bottom:4px solid var(--red)}
+.strip-item{padding:18px 32px;text-align:center;border-right:1px solid #eef0f4}
+.strip-item:last-child{border-right:none}
+.strip-item .num{font-size:20px;font-weight:800;color:var(--navy);line-height:1}
+.strip-item .desc{font-size:9px;color:var(--dgray);letter-spacing:1.5px;text-transform:uppercase;margin-top:2px}
+
+/* SEC HEADER */
+.sec-header{text-align:center;padding:56px 20px 14px}
+.sec-badge{display:inline-block;background:var(--red);color:#fff;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:5px 16px;border-radius:2px;margin-bottom:14px}
+.sec-header h2{font-family:'Playfair Display',serif;font-size:clamp(22px,3vw,32px);color:var(--navy);margin-bottom:8px}
+.sec-header p{font-size:13px;color:var(--dgray);max-width:520px;margin:0 auto;line-height:1.7}
+
+/* CATEGORIES */
+.cat-section{padding:0 36px 44px;max-width:1160px;margin:0 auto}
+.cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.cat-card{background:#fff;border-radius:10px;border:1px solid #e5e8f0;padding:20px 18px;cursor:pointer;transition:all .2s;text-align:center;border-top:3px solid transparent}
+.cat-card:hover,.cat-card.active{border-top-color:var(--red);box-shadow:0 6px 24px rgba(26,58,107,.12);transform:translateY(-2px)}
+.cat-icon{width:46px;height:46px;border-radius:10px;background:var(--light);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:22px}
+.cat-card h4{font-size:11px;font-weight:700;color:var(--navy);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.cat-count{font-size:10px;color:var(--dgray)}
+.cat-count strong{color:var(--red)}
+
+/* FILTER BAR */
+.filter-bar{max-width:1160px;margin:0 auto 20px;padding:0 36px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.filter-left{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.filter-label{font-size:9px;color:var(--dgray);font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.chip{display:inline-flex;align-items:center;background:#fff;border:1px solid var(--mgray);color:var(--navy);font-size:10px;font-weight:600;padding:5px 12px;border-radius:20px;cursor:pointer;transition:all .15s;letter-spacing:.5px;text-transform:uppercase}
+.chip:hover,.chip.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.filter-right{display:flex;align-items:center;gap:8px}
+.result-count{font-size:11px;color:var(--dgray)}
+.result-count strong{color:var(--navy)}
+.sort-select{border:1px solid var(--mgray);background:#fff;font-size:11px;font-family:'Montserrat',sans-serif;color:var(--navy);padding:6px 12px;border-radius:6px;cursor:pointer;outline:none}
+
+/* MEMBERS */
+.members-section{max-width:1160px;margin:0 auto;padding:0 36px 64px}
+.members-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.members-grid.list-view{grid-template-columns:1fr}
+
+/* SKELETON */
+.skeleton-card{background:#fff;border-radius:10px;border:1px solid #e5e8f0;height:160px;overflow:hidden;position:relative}
+.skeleton-card::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.6) 50%,transparent 100%);animation:shimmer 1.4s infinite}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.sk-line{background:#e5e8f0;border-radius:4px;margin-bottom:10px}
+.sk-stripe{width:5px;height:100%;background:#dde1ec;float:left;margin-right:16px}
+.sk-body{padding:18px 18px 18px 70px}
+.sk-title{height:14px;width:55%;margin-bottom:8px;background:#e5e8f0;border-radius:3px}
+.sk-sub{height:10px;width:30%;margin-bottom:14px;background:#eef0f4;border-radius:3px}
+.sk-desc{height:9px;background:#eef0f4;border-radius:3px;margin-bottom:6px}
+.sk-desc.short{width:75%}
+
+/* MEMBER CARD */
+.member-card{background:#fff;border-radius:10px;border:1px solid #e5e8f0;display:flex;overflow:hidden;transition:transform .2s,box-shadow .2s;cursor:pointer}
+.member-card:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(0,0,0,.1)}
+.member-card.hidden{display:none!important}
+.card-stripe{width:5px;flex-shrink:0}
+.card-body{padding:18px;flex:1;display:flex;flex-direction:column;gap:9px}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.card-left{display:flex;align-items:center;gap:12px}
+.card-logo{width:46px;height:46px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;text-align:center;line-height:1.2}
+.card-name h4{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:3px;line-height:1.2}
+.cat-badge{font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--red)}
+.card-fav{background:none;border:none;cursor:pointer;color:var(--mgray);font-size:16px;transition:color .2s;flex-shrink:0;line-height:1}
+.card-fav:hover,.card-fav.fav{color:var(--red)}
+.card-desc{font-size:11px;color:var(--dgray);line-height:1.6;flex:1;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.card-contact{display:flex;gap:10px;flex-wrap:wrap}
+.card-contact a{font-size:9px;color:var(--navy);text-decoration:none;display:flex;align-items:center;gap:3px}
+.card-contact a:hover{color:var(--red)}
+.card-btns{display:flex;gap:5px}
+.btn-sm{font-size:8px;padding:4px 11px;border-radius:20px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;font-family:'Montserrat',sans-serif;transition:all .15s;text-decoration:none;display:inline-block}
+.btn-p{background:var(--navy);color:#fff;border:1px solid var(--navy)}
+.btn-p:hover{background:#102856}
+.btn-o{background:transparent;color:var(--navy);border:1px solid var(--navy)}
+.btn-o:hover{background:var(--navy);color:#fff}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;display:none;align-items:center;justify-content:center;padding:24px}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:12px;max-width:620px;width:100%;max-height:90vh;overflow-y:auto;position:relative}
+.modal-head{background:linear-gradient(135deg,var(--dnavy),var(--navy));padding:28px 32px;border-radius:12px 12px 0 0;display:flex;gap:18px;align-items:center}
+.modal-logo{width:58px;height:58px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;background:rgba(255,255,255,.15);flex-shrink:0;border:1px solid rgba(255,255,255,.2);text-align:center;line-height:1.2}
+.modal-meta .m-cat{font-size:9px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:1px}
+.modal-meta h3{font-size:20px;font-weight:700;color:#fff;margin-top:3px}
+.modal-close{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.1);border:none;color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{background:rgba(255,255,255,.2)}
+.modal-body{padding:24px 28px}
+.modal-desc{font-size:13px;color:var(--dgray);line-height:1.8;margin-bottom:18px;padding:18px;background:var(--light);border-radius:8px}
+.info-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:12px;font-size:12px;color:var(--dgray)}
+.info-row .icon{color:var(--red);flex-shrink:0;margin-top:1px}
+.info-row a{color:var(--navy);text-decoration:none}
+.info-row a:hover{color:var(--red)}
+.modal-tags{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0}
+.mtag{background:var(--light);border:1px solid var(--mgray);border-radius:3px;padding:3px 10px;font-size:9px;font-weight:700;letter-spacing:1px;color:var(--navy);text-transform:uppercase}
+.modal-actions{display:flex;gap:10px}
+.btn-mp{background:var(--red);color:#fff;border:none;padding:11px 22px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;font-family:'Montserrat',sans-serif}
+.btn-mp:hover{background:#c73c0c}
+.btn-ms{background:#fff;color:var(--navy);border:1px solid var(--navy);padding:11px 22px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;font-family:'Montserrat',sans-serif}
+.btn-ms:hover{background:var(--navy);color:#fff}
+
+/* EMPTY / ERROR */
+.empty-state,.error-state{text-align:center;padding:64px 20px;color:var(--dgray);display:none}
+.empty-state h3,.error-state h3{font-size:16px;font-weight:700;color:var(--navy);margin:12px 0 8px}
+.empty-state p,.error-state p{font-size:13px;line-height:1.6}
+.error-state .err-icon{font-size:48px;margin-bottom:8px}
+.retry-btn{margin-top:16px;background:var(--red);color:#fff;border:none;padding:10px 24px;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Montserrat',sans-serif}
+
+/* PAGINATION */
+.pagination{display:flex;justify-content:center;gap:6px;padding:28px 0 0;align-items:center}
+.page-btn{width:34px;height:34px;border-radius:6px;display:flex;align-items:center;justify-content:center;border:1px solid var(--mgray);background:#fff;color:var(--navy);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+.page-btn:hover,.page-btn.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.page-dots{color:var(--dgray);font-size:12px;padding:0 4px}
+
+/* FOOTER */
+footer{background:var(--dnavy);padding:36px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+.footer-left .f-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.f-logo-pill{width:28px;height:28px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:900;color:#fff}
+.f-name{font-size:11px;font-weight:700;color:rgba(255,255,255,.7)}
+footer p{font-size:9px;color:rgba(255,255,255,.3);line-height:1.8}
+.footer-right{text-align:right}
+.footer-right p{font-size:9px;color:rgba(255,255,255,.25);margin-top:3px}
+.footer-right a{color:rgba(255,255,255,.35);text-decoration:none;font-size:9px}
+
+/* TOAST */
+.toast{position:fixed;bottom:18px;right:18px;z-index:1000;background:var(--navy);color:#fff;font-size:11px;font-weight:600;padding:10px 18px;border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.3);transform:translateY(80px);opacity:0;transition:all .3s}
+.toast.show{transform:translateY(0);opacity:1}
+.live-badge{position:fixed;bottom:16px;left:16px;z-index:999;background:var(--dnavy);color:#fff;font-size:9px;font-weight:600;padding:6px 12px;border-radius:20px;letter-spacing:1px;text-transform:uppercase;border:1px solid rgba(255,255,255,.15)}
+.live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#4CAF50;margin-right:5px;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+@media(max-width:860px){
+  .hero{grid-template-columns:1fr;min-height:auto}
+  .hero-right{border-left:none;border-top:1px solid rgba(255,255,255,.06)}
+  .hero-left{padding:44px 28px}
+  .cat-grid{grid-template-columns:repeat(2,1fr)}
+  .members-grid{grid-template-columns:1fr}
+  nav{padding:10px 20px}
+  .nav-search input{width:120px}
+}
+</style>
+</head>
+<body>
+
+<!-- ╔══════════════════════════════════════╗
+     ║  CONFIGURACIÓN – EDITA SOLO AQUÍ    ║
+     ║  Ver instrucciones al final del JS  ║
+     ╚══════════════════════════════════════╝ -->
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <div class="logo-pill">CChC</div>
+    <div class="nav-text">Catálogo de Socios 2026<span class="nav-sub">Los Ángeles · Comité de Proveedores</span></div>
+  </div>
+  <div class="nav-right">
+    <div class="nav-search">
+      <span>🔍</span>
+      <input type="text" id="navSearch" placeholder="Buscar socio o rubro…">
+    </div>
+    <button class="btn-view active" id="btnGrid">⊞</button>
+    <button class="btn-view" id="btnList">☰</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="eyebrow">CChC Los Ángeles · Comité de Proveedores, Especialistas e Industriales</div>
+    <h1>Catálogo<br>Digital de<br>Socios <em>2026</em></h1>
+    <p>Encuentra empresas proveedoras del sector construcción en Los Ángeles y la provincia del Biobío.</p>
+    <div class="hero-search">
+      <input type="text" id="heroSearch" placeholder="Buscar por empresa, rubro o servicio…">
+      <button onclick="syncSearch()">Buscar</button>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="stat-box"><div class="n" id="statTotal">–</div><div class="l">Socios activos</div></div>
+    <div class="stat-box"><div class="n" id="statCats">–</div><div class="l">Categorías</div></div>
+    <div class="stat-box"><div class="n">2026</div><div class="l">Edición actual</div></div>
+    <div class="stat-box"><div class="n" id="statUpdated">–</div><div class="l">Última actualización</div></div>
+  </div>
+</section>
+
+<!-- STATS STRIP -->
+<div class="stats-strip">
+  <div class="strip-item"><div class="num">Los Ángeles</div><div class="desc">Sede regional</div></div>
+  <div class="strip-item"><div class="num" id="stripSocios">–</div><div class="desc">Socios registrados</div></div>
+  <div class="strip-item"><div class="num" id="stripCats">–</div><div class="desc">Rubros</div></div>
+  <div class="strip-item"><div class="num">100%</div><div class="desc">Actualizado 2026</div></div>
+</div>
+
+<!-- CATEGORÍAS -->
+<div class="sec-header">
+  <span class="sec-badge">Explorar por categoría</span>
+  <h2>¿Qué tipo de proveedor buscas?</h2>
+  <p>Selecciona una categoría o usa el buscador para encontrar una empresa por nombre o rubro.</p>
+</div>
+<div class="cat-section">
+  <div class="cat-grid" id="catGrid">
+    <!-- Generado dinámicamente por JS -->
+  </div>
+</div>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+  <div class="filter-left" id="chipBar">
+    <span class="filter-label">Filtrar:</span>
+    <!-- Chips generados dinámicamente -->
+  </div>
+  <div class="filter-right">
+    <span class="result-count">Mostrando <strong id="visibleCount">–</strong> socios</span>
+    <select class="sort-select" onchange="sortMembers(this.value)">
+      <option value="az">Orden A–Z</option>
+      <option value="za">Orden Z–A</option>
+      <option value="cat">Por categoría</option>
+    </select>
+  </div>
+</div>
+
+<!-- MEMBERS -->
+<div class="members-section">
+  <div class="members-grid" id="membersGrid">
+    <!-- Skeletons mientras carga -->
+    <div class="skeleton-card"><div class="sk-stripe"></div><div class="sk-body"><div class="sk-title"></div><div class="sk-sub"></div><div class="sk-desc"></div><div class="sk-desc short"></div></div></div>
+    <div class="skeleton-card"><div class="sk-stripe"></div><div class="sk-body"><div class="sk-title"></div><div class="sk-sub"></div><div class="sk-desc"></div><div class="sk-desc short"></div></div></div>
+    <div class="skeleton-card"><div class="sk-stripe"></div><div class="sk-body"><div class="sk-title"></div><div class="sk-sub"></div><div class="sk-desc"></div><div class="sk-desc short"></div></div></div>
+    <div class="skeleton-card"><div class="sk-stripe"></div><div class="sk-body"><div class="sk-title"></div><div class="sk-sub"></div><div class="sk-desc"></div><div class="sk-desc short"></div></div></div>
+  </div>
+  <div class="empty-state" id="emptyState">
+    <div style="font-size:48px">🔍</div>
+    <h3>Sin resultados</h3>
+    <p>No se encontraron socios que coincidan.<br>Intenta con otro término o categoría.</p>
+  </div>
+  <div class="error-state" id="errorState">
+    <div class="err-icon">⚠️</div>
+    <h3>No se pudo cargar el catálogo</h3>
+    <p>Verifica que la hoja de Google Sheets esté publicada<br>y que el SHEET_ID sea correcto.</p>
+    <button class="retry-btn" onclick="loadData()">Reintentar</button>
+  </div>
+  <div class="pagination" id="pagination" style="display:none"></div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-left">
+    <div class="f-row"><div class="f-logo-pill">CChC</div><span class="f-name">Cámara Chilena de la Construcción · Los Ángeles</span></div>
+    <p>Lautaro 325, Piso 4 · Los Ángeles, Chile<br>comunicaciones.losangeles@cchc.cl · Comité de Proveedores, Especialistas e Industriales</p>
+  </div>
+  <div class="footer-right">
+    <p>Catálogo Digital de Socios 2026</p>
+    <p id="footerUpdate">Cargando datos…</p>
+    <a href="#">cchc.cl/losangeles</a>
+  </div>
+</footer>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-head" id="modalHead">
+      <div class="modal-logo" id="mLogo">–</div>
+      <div class="modal-meta">
+        <div class="m-cat" id="mCat"></div>
+        <h3 id="mName"></h3>
+      </div>
+      <button class="modal-close" onclick="document.getElementById('modalOverlay').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-desc" id="mDesc"></p>
+      <div class="info-row" id="mAddrRow"><span class="icon">📍</span><span id="mAddr"></span></div>
+      <div class="info-row" id="mPhoneRow"><span class="icon">📞</span><span id="mPhone"></span></div>
+      <div class="info-row" id="mWebRow"><span class="icon">🌐</span><a href="#" id="mWeb" target="_blank"></a></div>
+      <div class="info-row" id="mEmailRow"><span class="icon">✉️</span><a href="#" id="mEmail"></a></div>
+      <div class="modal-tags" id="mTags"></div>
+      <div class="modal-actions">
+        <button class="btn-mp" id="mContactBtn">📧 Solicitar contacto</button>
+        <button class="btn-ms">📄 Ver ficha PDF</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="live-badge"><span class="live-dot"></span>Datos en vivo · Google Sheets</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ╔═══════════════════════════════════════════════════════════════╗
+   ║            C O N F I G U R A C I Ó N                         ║
+   ╠═══════════════════════════════════════════════════════════════╣
+   ║                                                               ║
+   ║  SHEET_ID → ID de tu Google Sheet                            ║
+   ║  Ejemplo: en la URL                                          ║
+   ║  docs.google.com/spreadsheets/d/[SHEET_ID]/edit              ║
+   ║  copia el texto entre /d/ y /edit                            ║
+   ║                                                               ║
+   ║  SHEET_NAME → nombre de la hoja (pestaña en la planilla)     ║
+   ║                                                               ║
+   ║  La hoja debe estar PUBLICADA:                               ║
+   ║  Archivo → Compartir → Publicar en la web → Toda la hoja     ║
+   ║                                                               ║
+   ╠═══════════════════════════════════════════════════════════════╣
+   ║  COLUMNAS REQUERIDAS EN LA HOJA (fila 1 = encabezados):      ║
+   ║  Nombre | Categoria | Descripcion | Direccion | Telefono |   ║
+   ║  Web | Email | Iniciales | Color | Tags | Activo             ║
+   ╚═══════════════════════════════════════════════════════════════╝ */
+
+const CONFIG = {
+  // ── Pega aquí el link que te dio Google Sheets al publicar ──
+  // Cambia solo "/pubhtml" por "/pub?output=csv" al final
+  PUBLISHED_CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRdYXaw3yk9CAV-BAPbT1M6f7Z1LmN3Rv0anwQX3tBu9vXtyuyqsXwPz34EiKQ6aw/pub?output=csv',
+  PER_PAGE:          10,    // socios visibles por página
+  USE_DEMO:          false  // false = usa Google Sheets | true = muestra datos de ejemplo
+};
+
+/* ── COLORES POR DEFECTO POR CATEGORÍA ─────────────────── */
+const CAT_COLORS = {
+  'Materiales':   '#1A3A6B',
+  'Servicios':    '#E84D1C',
+  'Equipamiento': '#0097A7',
+  'Financiero':   '#F57C00',
+  'Logística':    '#6A1B9A',
+  'Educación':    '#2E7D32',
+  'Tecnología':   '#0277BD',
+  'Salud':        '#C62828',
+  'default':      '#4A5568'
+};
+
+const CAT_ICONS = {
+  'Materiales':'🧱','Servicios':'🔧','Equipamiento':'🏗️',
+  'Financiero':'💼','Logística':'🚛','Educación':'🎓',
+  'Tecnología':'💻','Salud':'🏥','default':'🏢'
+};
+
+/* ── DATOS DEMO (se usan si USE_DEMO=true y no hay SHEET_ID) ─ */
+const DEMO_DATA = [
+  {Nombre:'Bitumix Sur',Categoria:'Materiales',Descripcion:'Mezclas asfálticas en caliente y frío para pavimentación urbana e industrial. Planta propia en Los Ángeles con despacho a obra.',Direccion:'Km 3 Camino Los Ángeles–Mulchén',Telefono:'+56 43 236 9670',Web:'www.bitumixsur.cl',Email:'ventas@bitumixsur.cl',Iniciales:'BMX',Color:'#1A3A6B',Tags:'Asfalto,Pavimentación,Mezclas,Obras viales',Activo:'Sí'},
+  {Nombre:'Fabrika Concept',Categoria:'Materiales',Descripcion:'Diseño y fabricación de cocinas, closets y baños a medida. Showroom propio en Los Ángeles con asesoría personalizada.',Direccion:'Km 1.5 Camino a Nacimiento, Los Ángeles',Telefono:'',Web:'www.fabrikaconcept.cl',Email:'info@fabrikaconcept.cl',Iniciales:'FAB',Color:'#8E44AD',Tags:'Cocina,Closet,Baños,Mobiliario',Activo:'Sí'},
+  {Nombre:'INACAP Los Ángeles',Categoria:'Educación',Descripcion:'Instituto de formación técnica y profesional. Carreras vinculadas a la construcción, electricidad y administración. Sede propia en Los Ángeles.',Direccion:'Av. Ricardo Vicuña 825, Los Ángeles',Telefono:'+56 43 252 4800',Web:'www.inacap.cl',Email:'losangeles@inacap.cl',Iniciales:'INC',Color:'#C8102E',Tags:'Educación,Formación técnica,Capacitación',Activo:'Sí'},
+  {Nombre:'Constructora Los Robles',Categoria:'Servicios',Descripcion:'Obras civiles, edificación habitacional e industrial en la Región del Biobío. Más de 15 años de trayectoria comprobada en el sector.',Direccion:'Colo Colo 842, Los Ángeles',Telefono:'+56 43 231 1400',Web:'www.losrobles.cl',Email:'contacto@losrobles.cl',Iniciales:'CLR',Color:'#E84D1C',Tags:'Obras civiles,Edificación,Contratista',Activo:'Sí'},
+  {Nombre:'Banco BICE',Categoria:'Financiero',Descripcion:'Banco con fuerte presencia en el sector inmobiliario y construcción. Ofrece créditos hipotecarios, leasing y financiamiento de proyectos.',Direccion:'Colón 410, Los Ángeles',Telefono:'+56 43 222 0000',Web:'www.bice.cl',Email:'losangeles@bice.cl',Iniciales:'BCE',Color:'#F57C00',Tags:'Banco,Crédito hipotecario,Leasing,Financiamiento',Activo:'Sí'},
+  {Nombre:'Salfa Corp Los Ángeles',Categoria:'Equipamiento',Descripcion:'Arriendo y venta de maquinaria pesada para construcción. Flota propia con servicio técnico y soporte en la Región del Biobío.',Direccion:'Av. Jorge Alessandri 20500, Los Ángeles',Telefono:'+56 43 240 0000',Web:'www.salfacorp.com',Email:'biobio@salfacorp.com',Iniciales:'SLF',Color:'#0097A7',Tags:'Maquinaria,Arriendo,Excavadora,Grúa',Activo:'Sí'},
+  {Nombre:'Transporte Hernández e Hijos',Categoria:'Logística',Descripcion:'Empresa familiar de transporte de carga pesada. Traslado de materiales de construcción, áridos y maquinaria en el Biobío.',Direccion:'Ruta 5 Sur Km 502, Los Ángeles',Telefono:'+56 9 8831 0000',Web:'',Email:'hernandez.transporte@gmail.com',Iniciales:'THH',Color:'#6A1B9A',Tags:'Transporte,Logística,Camiones,Áridos',Activo:'Sí'},
+  {Nombre:'Pizarreño Los Ángeles',Categoria:'Materiales',Descripcion:'Distribuidor de productos para techumbre y cubierta. Planchas de fibrocemento, tejas y soluciones de impermeabilización.',Direccion:'Av. El Trébol s/n, Los Ángeles',Telefono:'+56 43 231 5000',Web:'www.pizarreno.cl',Email:'losangeles@pizarreno.cl',Iniciales:'PZR',Color:'#455A64',Tags:'Techumbre,Cubierta,Fibrocemento,Tejas',Activo:'Sí'},
+  {Nombre:'Ingeniería y Proyectos Sur',Categoria:'Servicios',Descripcion:'Diseño estructural, topografía, inspección técnica de obras (ITO) y gestión de proyectos. Oficinas en el centro de Los Ángeles.',Direccion:'Colo Colo 1050, Of. 302, Los Ángeles',Telefono:'+56 43 222 5000',Web:'www.ipsur.cl',Email:'proyectos@ipsur.cl',Iniciales:'IPS',Color:'#E84D1C',Tags:'Ingeniería,Topografía,ITO,Estructural',Activo:'Sí'},
+  {Nombre:'BIM Biobío',Categoria:'Tecnología',Descripcion:'Modelamiento BIM, coordinación de especialidades y capacitación en Revit y AutoCAD para equipos de proyecto y obra en la región.',Direccion:'Av. Ricardo Vicuña 650, Los Ángeles',Telefono:'+56 9 9123 4567',Web:'www.bimbio.cl',Email:'hola@bimbio.cl',Iniciales:'BIM',Color:'#0277BD',Tags:'BIM,Revit,AutoCAD,Modelamiento,Coordinación',Activo:'Sí'},
+  {Nombre:'ACHS Los Ángeles',Categoria:'Salud',Descripcion:'Asociación Chilena de Seguridad. Prestaciones en salud ocupacional, prevención de riesgos y rehabilitación para trabajadores del sector construcción.',Direccion:'Av. Ricardo Vicuña 391, Los Ángeles',Telefono:'+56 43 240 5000',Web:'www.achs.cl',Email:'losangeles@achs.cl',Iniciales:'ACH',Color:'#C62828',Tags:'Salud ocupacional,Prevención,Seguridad,Rehabilitación',Activo:'Sí'}
+];
+
+/* ═══════════════ ESTADO GLOBAL ═══════════════ */
+let allSocios = [];
+let filteredSocios = [];
+let currentCat = 'todos';
+let currentSearch = '';
+let currentPage = 1;
+const PER_PAGE = CONFIG.PER_PAGE;
+
+/* ═══════════════ CARGA DE DATOS ═══════════════ */
+async function loadData() {
+  document.getElementById('errorState').style.display = 'none';
+
+  // Modo demo: muestra datos de ejemplo sin conectar a Google Sheets
+  if (CONFIG.USE_DEMO) {
+    console.info('[Catálogo] Modo demo activo');
+    processData(DEMO_DATA);
+    return;
+  }
+
+  try {
+    // Fetch directo al CSV publicado de Google Sheets
+    const resp = await fetch(CONFIG.PUBLISHED_CSV_URL);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const text = await resp.text();
+
+    // Parsear CSV y filtrar solo filas con socios activos
+    const rows = parseCSV(text);
+    const activos = rows.filter(r =>
+      r.Nombre && r.Nombre.trim() &&
+      r.Nombre.trim() !== '← AÑADIR AQUÍ NUEVOS SOCIOS' &&
+      (r.Activo || 'Sí').trim().toLowerCase() !== 'no'
+    );
+
+    if (activos.length === 0) throw new Error('Sin datos válidos');
+    processData(activos);
+
+  } catch(e) {
+    console.error('[Catálogo] Error cargando datos:', e);
+    showError();
+  }
+}
+
+/* Parser CSV robusto — maneja campos con comas, comillas y tildes */
+function parseCSV(text) {
+  let headers = null;
+  const rows = [];
+  let field = '';
+  let fields = [];
+  let inQuote = false;
+  let i = 0;
+
+  const flushField = () => { fields.push(field); field = ''; };
+
+  const flushRow = () => {
+    flushField();
+    if (!headers) {
+      // Fila 1 → encabezados (limpiar comillas y espacios)
+      headers = fields.map(h => h.replace(/^"|"$/g, '').trim());
+    } else {
+      // Fila 2 → instrucciones de la plantilla, se salta si no tiene Activo
+      const obj = {};
+      headers.forEach((h, idx) => {
+        obj[h] = (fields[idx] || '').replace(/^"|"$/g, '').trim();
+      });
+      rows.push(obj);
+    }
+    fields = [];
+  };
+
+  while (i < text.length) {
+    const ch = text[i];
+    if (ch === '"') {
+      if (inQuote && text[i + 1] === '"') { field += '"'; i++; } // comilla escapada
+      else inQuote = !inQuote;
+    } else if (ch === ',' && !inQuote) {
+      flushField();
+    } else if ((ch === '\n' || ch === '\r') && !inQuote) {
+      if (ch === '\r' && text[i + 1] === '\n') i++; // CRLF
+      flushRow();
+    } else {
+      field += ch;
+    }
+    i++;
+  }
+  if (field || fields.length) flushRow(); // última fila sin \n
+
+  return rows;
+}
+
+function showError() {
+  document.getElementById('membersGrid').innerHTML = '';
+  document.getElementById('errorState').style.display = 'block';
+}
+
+/* ═══════════════ PROCESAR DATOS ═══════════════ */
+function processData(data) {
+  allSocios = data.filter(s => (s.Activo || '').toLowerCase() !== 'no');
+
+  // Stats
+  const cats = [...new Set(allSocios.map(s => s.Categoria).filter(Boolean))];
+  document.getElementById('statTotal').textContent = allSocios.length;
+  document.getElementById('statCats').textContent = cats.length;
+  document.getElementById('statUpdated').textContent = 'Jun \'26';
+  document.getElementById('stripSocios').textContent = allSocios.length + '+';
+  document.getElementById('stripCats').textContent = cats.length;
+  document.getElementById('footerUpdate').textContent = 'Actualizado junio 2026';
+
+  buildCategoryGrid(cats);
+  buildChips(cats);
+  applyFilters();
+}
+
+/* ═══════════════ CATEGORÍAS ═══════════════ */
+function buildCategoryGrid(cats) {
+  const grid = document.getElementById('catGrid');
+  const all = { cat: 'todos', count: allSocios.length };
+  const items = [all, ...cats.map(c => ({
+    cat: c,
+    count: allSocios.filter(s => s.Categoria === c).length
+  }))];
+
+  grid.innerHTML = items.map(item => {
+    const icon = CAT_ICONS[item.cat] || CAT_ICONS.default;
+    const label = item.cat === 'todos' ? 'Todos' : item.cat;
+    return `<div class="cat-card${item.cat==='todos'?' active':''}" data-cat="${item.cat}"
+               onclick="filterCat(this,'${item.cat}')">
+      <div class="cat-icon">${icon}</div>
+      <h4>${label}</h4>
+      <div class="cat-count"><strong>${item.count}</strong> socio${item.count!==1?'s':''}</div>
+    </div>`;
+  }).join('');
+}
+
+function buildChips(cats) {
+  const bar = document.getElementById('chipBar');
+  const items = ['todos', ...cats];
+  bar.innerHTML = `<span class="filter-label">Filtrar:</span>` +
+    items.map(c => `<div class="chip${c==='todos'?' active':''}" data-chip="${c}"
+       onclick="filterCatChip(this,'${c}')">${c==='todos'?'Todos':c}</div>`).join('');
+}
+
+/* ═══════════════ FILTROS ═══════════════ */
+function filterCat(el, cat) {
+  currentCat = cat; currentPage = 1;
+  document.querySelectorAll('.cat-card').forEach(c => c.classList.toggle('active', c.dataset.cat===cat));
+  document.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.chip===cat));
+  applyFilters();
+  document.querySelector('.filter-bar').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function filterCatChip(el, cat) {
+  currentCat = cat; currentPage = 1;
+  document.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.chip===cat));
+  document.querySelectorAll('.cat-card').forEach(c => c.classList.toggle('active', c.dataset.cat===cat));
+  applyFilters();
+}
+
+function applyFilters() {
+  const q = currentSearch.toLowerCase();
+  filteredSocios = allSocios.filter(s => {
+    const matchCat = currentCat === 'todos' || s.Categoria === currentCat;
+    const searchStr = `${s.Nombre} ${s.Categoria} ${s.Descripcion} ${s.Tags} ${s.Rubro||''}`.toLowerCase();
+    const matchQ = !q || searchStr.includes(q);
+    return matchCat && matchQ;
+  });
+  document.getElementById('visibleCount').textContent = filteredSocios.length;
+  renderPage(1);
+}
+
+function sortMembers(order) {
+  filteredSocios.sort((a,b) => {
+    if(order==='az') return (a.Nombre||'').localeCompare(b.Nombre||'','es');
+    if(order==='za') return (b.Nombre||'').localeCompare(a.Nombre||'','es');
+    if(order==='cat') return (a.Categoria||'').localeCompare(b.Categoria||'','es')||(a.Nombre||'').localeCompare(b.Nombre||'','es');
+  });
+  renderPage(1);
+}
+
+/* ═══════════════ RENDER CARDS ═══════════════ */
+function renderPage(page) {
+  currentPage = page;
+  const grid = document.getElementById('membersGrid');
+  const empty = document.getElementById('emptyState');
+
+  if (filteredSocios.length === 0) {
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+    document.getElementById('pagination').style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+
+  const start = (page-1)*PER_PAGE;
+  const pageData = filteredSocios.slice(start, start+PER_PAGE);
+  grid.innerHTML = pageData.map(s => buildCard(s)).join('');
+  buildPagination(filteredSocios.length);
+}
+
+function buildCard(s) {
+  const color = s.Color || CAT_COLORS[s.Categoria] || CAT_COLORS.default;
+  const initials = s.Iniciales || getInitials(s.Nombre);
+  const tags = s.Tags ? s.Tags.split(',').map(t=>t.trim()).filter(Boolean) : [];
+  const catClass = 'cat-' + (s.Categoria||'').toLowerCase().replace(/[^a-z]/g,'');
+  const dataModal = JSON.stringify(s).replace(/'/g,"&#39;").replace(/"/g,'&quot;');
+
+  return `<div class="member-card" data-cat="${s.Categoria||''}" data-name="${s.Nombre||''}"
+              data-search="${(s.Nombre+' '+s.Categoria+' '+s.Descripcion+' '+s.Tags).toLowerCase()}"
+              onclick='openModal(${JSON.stringify(s)})'>
+    <div class="card-stripe ${catClass}" style="background:${color}"></div>
+    <div class="card-body">
+      <div class="card-top">
+        <div class="card-left">
+          <div class="card-logo" style="background:${color}">${initials}</div>
+          <div class="card-name">
+            <h4>${s.Nombre||'—'}</h4>
+            <span class="cat-badge">${s.Categoria||'—'}</span>
+          </div>
+        </div>
+        <button class="card-fav" onclick="event.stopPropagation();toggleFav(this)">♡</button>
+      </div>
+      <p class="card-desc">${s.Descripcion||'Sin descripción disponible.'}</p>
+      <div class="card-footer">
+        <div class="card-contact">
+          ${s.Web?`<a href="https://${s.Web}" target="_blank" onclick="event.stopPropagation()">🌐 ${s.Web}</a>`:''}
+          ${s.Telefono?`<a href="tel:${s.Telefono}" onclick="event.stopPropagation()">📞 ${s.Telefono}</a>`:''}
+        </div>
+        <div class="card-btns">
+          ${s.Web?`<a class="btn-sm btn-o" href="https://${s.Web}" target="_blank" onclick="event.stopPropagation()">Web</a>`:''}
+          ${s.Email?`<a class="btn-sm btn-p" href="mailto:${s.Email}" onclick="event.stopPropagation()">Contactar</a>`:'<span class="btn-sm btn-p" onclick="event.stopPropagation()">Ver ficha</span>'}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function getInitials(name) {
+  return (name||'?').split(/\s+/).filter(w=>w.length>2).slice(0,3).map(w=>w[0].toUpperCase()).join('') || name.substring(0,3).toUpperCase();
+}
+
+/* ═══════════════ PAGINACIÓN ═══════════════ */
+function buildPagination(total) {
+  const pages = Math.ceil(total/PER_PAGE);
+  const pag = document.getElementById('pagination');
+  if(pages<=1){pag.style.display='none';return;}
+  pag.style.display='flex';
+  let html='';
+  for(let i=1;i<=pages;i++){
+    if(pages>6&&i>2&&i<pages-1&&Math.abs(i-currentPage)>1){
+      if(i===3||i===pages-2) html+='<span class="page-dots">…</span>';
+      continue;
+    }
+    html+=`<div class="page-btn${i===currentPage?' active':''}" onclick="renderPage(${i})">${i}</div>`;
+  }
+  pag.innerHTML=html;
+}
+
+/* ═══════════════ MODAL ═══════════════ */
+function openModal(s) {
+  const color = s.Color || CAT_COLORS[s.Categoria] || CAT_COLORS.default;
+  const initials = s.Iniciales || getInitials(s.Nombre);
+  document.getElementById('mLogo').textContent = initials;
+  document.getElementById('mLogo').style.background = color;
+  document.getElementById('mCat').textContent = s.Categoria||'';
+  document.getElementById('mName').textContent = s.Nombre||'';
+  document.getElementById('mDesc').textContent = s.Descripcion||'Sin descripción.';
+
+  const setRow = (rowId, valId, val, href) => {
+    const row = document.getElementById(rowId);
+    row.style.display = val ? 'flex' : 'none';
+    const el = document.getElementById(valId);
+    el.textContent = val||'';
+    if(href) el.href = href;
+  };
+
+  setRow('mAddrRow','mAddr',s.Direccion);
+  setRow('mPhoneRow','mPhone',s.Telefono);
+  setRow('mWebRow','mWeb',s.Web,'https://'+s.Web);
+  setRow('mEmailRow','mEmail',s.Email,'mailto:'+s.Email);
+
+  const tags = s.Tags ? s.Tags.split(',').map(t=>t.trim()).filter(Boolean) : [];
+  document.getElementById('mTags').innerHTML = tags.map(t=>`<span class="mtag">${t}</span>`).join('');
+
+  const btn = document.getElementById('mContactBtn');
+  btn.onclick = () => { if(s.Email) window.location.href='mailto:'+s.Email; };
+
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal(e){
+  if(e.target===document.getElementById('modalOverlay'))
+    document.getElementById('modalOverlay').classList.remove('open');
+}
+
+/* ═══════════════ BÚSQUEDA ═══════════════ */
+function syncSearch(){
+  currentSearch = document.getElementById('heroSearch').value;
+  document.getElementById('navSearch').value = currentSearch;
+  currentPage = 1;
+  applyFilters();
+}
+['navSearch','heroSearch'].forEach(id => {
+  document.getElementById(id).addEventListener('input', function(){
+    currentSearch = this.value;
+    document.getElementById(id==='navSearch'?'heroSearch':'navSearch').value = this.value;
+    currentPage = 1;
+    applyFilters();
+  });
+});
+document.getElementById('heroSearch').addEventListener('keypress', e => { if(e.key==='Enter') syncSearch(); });
+
+/* ═══════════════ VISTA TOGGLE ═══════════════ */
+document.getElementById('btnGrid').addEventListener('click',function(){
+  document.getElementById('membersGrid').classList.remove('list-view');
+  this.classList.add('active');
+  document.getElementById('btnList').classList.remove('active');
+});
+document.getElementById('btnList').addEventListener('click',function(){
+  document.getElementById('membersGrid').classList.add('list-view');
+  this.classList.add('active');
+  document.getElementById('btnGrid').classList.remove('active');
+});
+
+/* ═══════════════ FAV ═══════════════ */
+function toggleFav(btn){
+  btn.classList.toggle('fav');
+  btn.textContent = btn.classList.contains('fav') ? '♥' : '♡';
+  showToast(btn.classList.contains('fav') ? '❤️ Guardado en favoritos' : 'Eliminado de favoritos');
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+/* ═══════════════ INICIO ═══════════════ */
+loadData();
+</script>
+</body>
+</html>
