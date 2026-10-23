@@ -360,28 +360,28 @@ footer p{font-size:9px;color:rgba(255,255,255,.3);line-height:1.8}
 const CONFIG = {
   // ── Pega aquí el link que te dio Google Sheets al publicar ──
   // Cambia solo "/pubhtml" por "/pub?output=csv" al final
-  PUBLISHED_CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRdYXaw3yk9CAV-BAPbT1M6f7Z1LmN3Rv0anwQX3tBu9vXtyuyqsXwPz34EiKQ6aw/pub?output=csv',
+  PUBLISHED_CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR5G7-R-nB96wpRlPX1mnZD3Sn9MF2yampAs7c9-sBMlrxZF01OaS2-BQKJ-nZhKqlfLZsyJQKpmcqP/pub?output=csv',
   PER_PAGE:          10,    // socios visibles por página
   USE_DEMO:          false  // false = usa Google Sheets | true = muestra datos de ejemplo
 };
 
 /* ── COLORES POR DEFECTO POR CATEGORÍA ─────────────────── */
 const CAT_COLORS = {
-  'Materiales':   '#1A3A6B',
-  'Servicios':    '#E84D1C',
-  'Equipamiento': '#0097A7',
-  'Financiero':   '#F57C00',
-  'Logística':    '#6A1B9A',
-  'Educación':    '#2E7D32',
-  'Tecnología':   '#0277BD',
-  'Salud':        '#C62828',
-  'default':      '#4A5568'
+'Constructora': '#E84D1C',
+'Inmobiliaria': '#1A3A6B',
+'Proveedor': '#0097A7',
+'Contratista': '#F57C00',
+'Consultora': '#6A1B9A',
+'Distribuidor': '#455A64',
+'Educación Superior': '#2E7D32',
+'Socio Profesional': '#0277BD',
+'default': '#4A5568'
 };
 
 const CAT_ICONS = {
-  'Materiales':'🧱','Servicios':'🔧','Equipamiento':'🏗️',
-  'Financiero':'💼','Logística':'🚛','Educación':'🎓',
-  'Tecnología':'💻','Salud':'🏥','default':'🏢'
+'Constructora':'🏗️','Inmobiliaria':'🏢','Proveedor':'🧱',
+'Contratista':'👷','Consultora':'💼','Distribuidor':'🚚',
+'Educación Superior':'🎓','Socio Profesional':'🧑‍💼','default':'🏢'
 };
 
 /* ── DATOS DEMO (se usan si USE_DEMO=true y no hay SHEET_ID) ─ */
@@ -406,6 +406,10 @@ let currentCat = 'todos';
 let currentSearch = '';
 let currentPage = 1;
 const PER_PAGE = CONFIG.PER_PAGE;
+
+/* Un socio puede tener varias categorias separadas por coma */
+const splitCats = s => (s.Categoria || '').split(',').map(c => c.trim()).filter(Boolean);
+const hasCat = (s, c) => splitCats(s).includes(c);
 
 /* ═══════════════ CARGA DE DATOS ═══════════════ */
 async function loadData() {
@@ -498,7 +502,7 @@ function processData(data) {
   allSocios = data.filter(s => (s.Activo || '').toLowerCase() !== 'no');
 
   // Stats
-  const cats = [...new Set(allSocios.map(s => s.Categoria).filter(Boolean))];
+  const cats = [...new Set(allSocios.flatMap(splitCats))];
   document.getElementById('statTotal').textContent = allSocios.length;
   document.getElementById('statCats').textContent = cats.length;
   document.getElementById('statUpdated').textContent = 'Jun \'26';
@@ -517,7 +521,7 @@ function buildCategoryGrid(cats) {
   const all = { cat: 'todos', count: allSocios.length };
   const items = [all, ...cats.map(c => ({
     cat: c,
-    count: allSocios.filter(s => s.Categoria === c).length
+    count: allSocios.filter(s => hasCat(s, c)).length
   }))];
 
   grid.innerHTML = items.map(item => {
@@ -559,7 +563,7 @@ function filterCatChip(el, cat) {
 function applyFilters() {
   const q = currentSearch.toLowerCase();
   filteredSocios = allSocios.filter(s => {
-    const matchCat = currentCat === 'todos' || s.Categoria === currentCat;
+    const matchCat = currentCat === 'todos' || hasCat(s, currentCat);
     const searchStr = `${s.Nombre} ${s.Categoria} ${s.Descripcion} ${s.Tags} ${s.Rubro||''}`.toLowerCase();
     const matchQ = !q || searchStr.includes(q);
     return matchCat && matchQ;
@@ -598,7 +602,7 @@ function renderPage(page) {
 }
 
 function buildCard(s) {
-  const color = s.Color || CAT_COLORS[s.Categoria] || CAT_COLORS.default;
+  const color = s.Color || CAT_COLORS[splitCats(s)[0]] || CAT_COLORS.default;
   const initials = s.Iniciales || getInitials(s.Nombre);
   const tags = s.Tags ? s.Tags.split(',').map(t=>t.trim()).filter(Boolean) : [];
   const catClass = 'cat-' + (s.Categoria||'').toLowerCase().replace(/[^a-z]/g,'');
@@ -606,7 +610,7 @@ function buildCard(s) {
 
   return `<div class="member-card" data-cat="${s.Categoria||''}" data-name="${s.Nombre||''}"
               data-search="${(s.Nombre+' '+s.Categoria+' '+s.Descripcion+' '+s.Tags).toLowerCase()}"
-              onclick='openModal(${JSON.stringify(s)})'>
+              data-s="${dataModal}" onclick="openModal(JSON.parse(this.dataset.s))">
     <div class="card-stripe ${catClass}" style="background:${color}"></div>
     <div class="card-body">
       <div class="card-top">
@@ -614,7 +618,7 @@ function buildCard(s) {
           <div class="card-logo" style="background:${color}">${initials}</div>
           <div class="card-name">
             <h4>${s.Nombre||'—'}</h4>
-            <span class="cat-badge">${s.Categoria||'—'}</span>
+            <span class="cat-badge">${splitCats(s).join(' · ')||'—'}</span>
           </div>
         </div>
         <button class="card-fav" onclick="event.stopPropagation();toggleFav(this)">♡</button>
@@ -657,11 +661,11 @@ function buildPagination(total) {
 
 /* ═══════════════ MODAL ═══════════════ */
 function openModal(s) {
-  const color = s.Color || CAT_COLORS[s.Categoria] || CAT_COLORS.default;
+  const color = s.Color || CAT_COLORS[splitCats(s)[0]] || CAT_COLORS.default;
   const initials = s.Iniciales || getInitials(s.Nombre);
   document.getElementById('mLogo').textContent = initials;
   document.getElementById('mLogo').style.background = color;
-  document.getElementById('mCat').textContent = s.Categoria||'';
+  document.getElementById('mCat').textContent = splitCats(s).join(' · ');
   document.getElementById('mName').textContent = s.Nombre||'';
   document.getElementById('mDesc').textContent = s.Descripcion||'Sin descripción.';
 
