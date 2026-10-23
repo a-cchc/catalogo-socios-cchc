@@ -324,6 +324,7 @@ footer p{font-size:9px;color:rgba(255,255,255,.3);line-height:1.8}
       <div class="info-row" id="mPhoneRow"><span class="icon">📞</span><span id="mPhone"></span></div>
       <div class="info-row" id="mWebRow"><span class="icon">🌐</span><a href="#" id="mWeb" target="_blank"></a></div>
       <div class="info-row" id="mEmailRow"><span class="icon">✉️</span><a href="#" id="mEmail"></a></div>
+<div class="info-row" id="mSocialRow"><span class="icon">🔗</span><span id="mSocial"></span></div>
       <div class="modal-tags" id="mTags"></div>
       <div class="modal-actions">
         <button class="btn-mp" id="mContactBtn">📧 Solicitar contacto</button>
@@ -410,6 +411,9 @@ const PER_PAGE = CONFIG.PER_PAGE;
 /* Un socio puede tener varias categorias separadas por coma */
 const splitCats = s => (s.Categoria || '').split(',').map(c => c.trim()).filter(Boolean);
 const hasCat = (s, c) => splitCats(s).includes(c);
+
+/* Redes sociales: detecta la red segun la URL */
+const socialLinks = s => [s.RedSocial, s.RedSocial2].filter(Boolean).map(u => ({u, n: /instagram/i.test(u)?'Instagram':/facebook|fb\.com/i.test(u)?'Facebook':/linkedin/i.test(u)?'LinkedIn':/tiktok/i.test(u)?'TikTok':/youtube|youtu\.be/i.test(u)?'YouTube':/twitter|x\.com/i.test(u)?'X':'Red social'}));
 
 /* ═══════════════ CARGA DE DATOS ═══════════════ */
 async function loadData() {
@@ -628,6 +632,7 @@ function buildCard(s) {
         <div class="card-contact">
           ${s.Web?`<a href="https://${s.Web}" target="_blank" onclick="event.stopPropagation()">🌐 ${s.Web}</a>`:''}
           ${s.Telefono?`<a href="tel:${s.Telefono}" onclick="event.stopPropagation()">📞 ${s.Telefono}</a>`:''}
+${socialLinks(s).map(r=>`<a href="${r.u}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 ${r.n}</a>`).join('')}
         </div>
         <div class="card-btns">
           ${s.Web?`<a class="btn-sm btn-o" href="https://${s.Web}" target="_blank" onclick="event.stopPropagation()">Web</a>`:''}
@@ -681,6 +686,9 @@ function openModal(s) {
   setRow('mPhoneRow','mPhone',s.Telefono);
   setRow('mWebRow','mWeb',s.Web,'https://'+s.Web);
   setRow('mEmailRow','mEmail',s.Email,'mailto:'+s.Email);
+const sl = socialLinks(s);
+document.getElementById('mSocialRow').style.display = sl.length ? 'flex' : 'none';
+document.getElementById('mSocial').innerHTML = sl.map(r=>`<a href="${r.u}" target="_blank" rel="noopener">${r.n}</a>`).join(' · ');
 
   const tags = s.Tags ? s.Tags.split(',').map(t=>t.trim()).filter(Boolean) : [];
   document.getElementById('mTags').innerHTML = tags.map(t=>`<span class="mtag">${t}</span>`).join('');
