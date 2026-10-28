@@ -140,6 +140,11 @@ nav{position:sticky;top:0;z-index:200;background:#fff;border-bottom:1px solid va
 .card-body{padding:22px 22px 18px;display:flex;flex-direction:column;gap:12px;flex:1}
 .card-top{display:flex;align-items:flex-start;gap:14px}
 .card-logo{width:52px;height:52px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;letter-spacing:.5px;background:var(--accent,var(--azul))}
+.card-logo.has-img{width:104px;height:64px;background:#fff;border:1px solid var(--gris-claro);padding:6px}
+.card-logo img{width:100%;height:100%;object-fit:contain;display:block}
+.card-logo.has-img span{display:none}
+.card-logo.person{width:64px;height:64px;border-radius:50%;padding:0;overflow:hidden;border:2px solid var(--azul-claro)}
+.card-logo.person img{object-fit:cover}
 .card-name{flex:1;min-width:0}
 .card-name h3{font-size:17px;font-weight:700;color:var(--negro);line-height:1.25;margin-bottom:6px}
 .cat-tags{display:flex;flex-wrap:wrap;gap:5px}
@@ -199,6 +204,11 @@ nav{position:sticky;top:0;z-index:200;background:#fff;border-bottom:1px solid va
 .modal-head{background:var(--azul);color:#fff;padding:30px 32px 28px;display:flex;gap:18px;align-items:center;position:relative}
 .modal-head::after{content:'';position:absolute;left:0;bottom:0;width:72px;height:4px;background:var(--rojo)}
 .modal-logo{width:64px;height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35)}
+.modal-logo.has-img{width:132px;height:84px;background:#fff;border:none;padding:8px}
+.modal-logo.has-img span{display:none}
+.modal-logo img{width:100%;height:100%;object-fit:contain;display:block}
+.modal-logo.person{width:84px;height:84px;border-radius:50%;padding:0;overflow:hidden;border:3px solid #fff}
+.modal-logo.person img{object-fit:cover}
 .m-cat{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;opacity:.85}
 .modal-head h3{font-size:22px;font-weight:700;line-height:1.2;margin-top:4px;padding-right:30px}
 .modal-close{position:absolute;top:14px;right:14px;width:34px;height:34px;border:none;background:rgba(255,255,255,.14);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:2px}
@@ -427,7 +437,7 @@ footer{background:var(--azul);color:#fff;margin-top:20px}
 <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mName">
     <div class="modal-head">
-      <div class="modal-logo" id="mLogo">–</div>
+      <div id="mLogoWrap"><div class="modal-logo">–</div></div>
       <div>
         <div class="m-cat" id="mCat"></div>
         <h3 id="mName"></h3>
@@ -459,7 +469,7 @@ footer{background:var(--azul);color:#fff;margin-top:20px}
    ║  (Archivo → Compartir → Publicar en la Web)                   ║
    ║  COLUMNAS: Nombre | Categoria | Descripcion | Direccion |     ║
    ║  Telefono | Web | Email | Iniciales | Color | Tags | Activo | ║
-   ║  RedSocial | RedSocial2                                       ║
+   ║  RedSocial | RedSocial2 | Logo (ej: logos/archivo.webp)       ║
    ╚═══════════════════════════════════════════════════════════════╝ */
 const CONFIG = {
   PUBLISHED_CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR5G7-R-nB96wpRlPX1mnZD3Sn9MF2yampAs7c9-sBMlrxZF01OaS2-BQKJ-nZhKqlfLZsyJQKpmcqP/pub?output=csv',
@@ -510,6 +520,13 @@ const socialLinks = s => [s.RedSocial, s.RedSocial2].filter(Boolean).map(u => {
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const icon = (id, cls='') => `<svg class="${cls}" aria-hidden="true"><use href="#${id}"/></svg>`;
 const webUrl = w => /^https?:\/\//i.test(w) ? w : 'https://' + w;
+const isPerson = s => hasCat(s, 'Socio Profesional') && splitCats(s).length === 1;
+/* Logo (columna "Logo" de la hoja, ej: logos/archivo.webp). Si falta o no carga, se muestran las iniciales */
+const logoHTML = (s, cls) => {
+  const ini = esc(s.Iniciales || getInitials(s.Nombre));
+  if (!s.Logo) return `<div class="${cls}"><span>${ini}</span></div>`;
+  return `<div class="${cls} has-img${isPerson(s)?' person':''}"><span>${ini}</span><img src="${esc(s.Logo)}" alt="${esc(s.Nombre)}" loading="lazy" onerror="this.parentNode.classList.remove('has-img','person');this.remove()"></div>`;
+};
 
 /* ═══════════════ CARGA DE DATOS ═══════════════ */
 async function loadData() {
@@ -654,13 +671,12 @@ function renderPage(page) {
 }
 
 function buildCard(s, idx) {
-  const initials = s.Iniciales || getInitials(s.Nombre);
   const cats = splitCats(s);
   const socials = socialLinks(s);
   return `<article class="member-card" style="--accent:${accentOf(s)}" data-idx="${idx}" tabindex="0" aria-label="Ver ficha de ${esc(s.Nombre)}">
     <div class="card-body">
       <div class="card-top">
-        <div class="card-logo">${esc(initials)}</div>
+        ${logoHTML(s, 'card-logo')}
         <div class="card-name">
           <h3>${esc(s.Nombre || '—')}</h3>
           <div class="cat-tags">${cats.map(c => `<span class="cat-tag${c==='Socio Profesional'?' prof':''}">${esc(c)}</span>`).join('')}</div>
@@ -723,7 +739,7 @@ let lastFocus = null;
 function openModal(s) {
   if (!s) return;
   lastFocus = document.activeElement;
-  document.getElementById('mLogo').textContent = s.Iniciales || getInitials(s.Nombre);
+  document.getElementById('mLogoWrap').innerHTML = logoHTML(s, 'modal-logo');
   document.getElementById('mCat').textContent = splitCats(s).join(' · ');
   document.getElementById('mName').textContent = s.Nombre || '';
   document.getElementById('mDesc').textContent = s.Descripcion || 'Sin descripción.';
