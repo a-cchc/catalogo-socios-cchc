@@ -515,7 +515,7 @@ const PER_PAGE = CONFIG.PER_PAGE;
 /* Un socio puede tener varias categorías separadas por coma */
 const splitCats = s => (s.Categoria || '').split(',').map(c => c.trim()).filter(Boolean);
 const hasCat = (s, c) => splitCats(s).includes(c);
-const accentOf = s => CAT_COLORS[splitCats(s)[0]] || CAT_COLORS.default;
+const accentOf = s => CAT_BAR[splitCats(s)[0]] || CAT_COLORS.default;
 
 /* Redes sociales: detecta la red según la URL */
 const socialLinks = s => [s.RedSocial, s.RedSocial2].filter(Boolean).map(u => {
