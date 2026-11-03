@@ -428,7 +428,7 @@ footer{background:var(--azul);color:#fff;margin-top:20px}
   <div class="foot-bar">
     <div class="wrap">
       <span>Catálogo Digital de Socios 2026</span>
-      <span class="live">Datos en vivo · Google Sheets</span>
+      <span class="live">Última actualización</span>
     </div>
   </div>
 </footer>
@@ -658,12 +658,13 @@ function sortList() {
 }
 
 function applyFilters() {
-  const q = currentSearch.trim().toLowerCase();
+  const q = normTag(currentSearch);
+  const qWords = q.split(/\s+/).filter(Boolean);
   filteredSocios = allSocios.filter(s => {
     const matchCat = currentCat === 'todos' || hasCat(s, currentCat);
-    const searchStr = `${s.Nombre} ${s.Categoria} ${s.Descripcion} ${s.Tags} ${s.Rubro||''}`.toLowerCase();
+    const searchStr = normTag(`${s.Nombre} ${s.Categoria} ${s.Descripcion} ${s.Tags} ${s.Rubro||''}`);
     const matchTag = !currentTag || tagList(s).some(function(t){ return normTag(t) === currentTag; });
-    return matchCat && matchTag && (!q || searchStr.includes(q));
+    return matchCat && matchTag && (!q || qWords.every(function(w){ return searchStr.includes(w); }));
   });
   sortList();
   document.getElementById('visibleCount').textContent = filteredSocios.length;
