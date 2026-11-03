@@ -499,6 +499,7 @@ const DEMO_DATA = [
 let allSocios = [];
 let filteredSocios = [];
 let currentCat = 'todos';
+let currentTag = '';
 let currentSearch = '';
 let currentSort = 'az';
 let currentPage = 1;
@@ -612,16 +613,32 @@ function buildCategoryGrid(cats) {
   }).join('');
 }
 
-function buildChips(cats) {
-  document.getElementById('chipBar').innerHTML = `<span class="filter-label">Filtrar:</span>` +
-    ['todos', ...cats].map(c => `<button class="chip${c===currentCat?' active':''}" data-chip="${esc(c)}" type="button">${esc(c==='todos'?'Todos':c)}</button>`).join('');
+function normTag(t) { return (t || '').toString().trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+function tagList(s) { return (s.Tags || '').split(',').map(function(x){ return x.trim(); }).filter(Boolean); }
+function buildChips() {
+  var catKeys = new Set(allSocios.flatMap(splitCats).map(normTag));
+  var m = new Map();
+  allSocios.forEach(function(s) {
+    var seen = new Set();
+    tagList(s).forEach(function(t) {
+      var k = normTag(t);
+      if (!k || seen.has(k) || catKeys.has(k)) return;
+      seen.add(k);
+      var e = m.get(k) || {label: t, count: 0};
+      e.count++; m.set(k, e);
+    });
+  });
+  var top = Array.from(m.entries()).filter(function(x){ return x[1].count >= 2; })
+    .sort(function(a, b){ return b[1].count - a[1].count || a[1].label.localeCompare(b[1].label, 'es'); }).slice(0, 10);
+  document.getElementById('chipBar').innerHTML = '<span class="filter-label">Palabras clave:</span>' +
+    '<button class="chip' + (currentTag === '' ? ' active' : '') + '" data-chip="" type="button">Todas</button>' +
+    top.map(function(x){ return '<button class="chip' + (x[0] === currentTag ? ' active' : '') + '" data-chip="' + esc(x[0]) + '" type="button">' + esc(x[1].label) + ' (' + x[1].count + ')</button>'; }).join('');
 }
 
 /* ═══════════════ FILTROS ═══════════════ */
 function setCategory(cat, scroll) {
   currentCat = cat; currentPage = 1;
   document.querySelectorAll('.cat-card').forEach(c => c.classList.toggle('active', c.dataset.cat === cat));
-  document.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.chip === cat));
   applyFilters();
   if (scroll) document.getElementById('filterBar').scrollIntoView({behavior:'smooth', block:'start'});
 }
@@ -630,7 +647,7 @@ function filterCat(el, cat) { setCategory(cat, true); }
 function filterCatChip(el, cat) { setCategory(cat, false); }
 
 document.getElementById('catGrid').addEventListener('click', e => { const b = e.target.closest('.cat-card'); if (b) setCategory(b.dataset.cat, true); });
-document.getElementById('chipBar').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) setCategory(b.dataset.chip, false); });
+document.getElementById('chipBar').addEventListener('click', function(e) { var b = e.target.closest('.chip'); if (!b) return; var k = b.dataset.chip; currentTag = (k === currentTag) ? '' : k; document.querySelectorAll('.chip').forEach(function(c){ c.classList.toggle('active', c.dataset.chip === currentTag); }); applyFilters(); });
 
 function sortList() {
   filteredSocios.sort((a, b) => {
@@ -645,7 +662,8 @@ function applyFilters() {
   filteredSocios = allSocios.filter(s => {
     const matchCat = currentCat === 'todos' || hasCat(s, currentCat);
     const searchStr = `${s.Nombre} ${s.Categoria} ${s.Descripcion} ${s.Tags} ${s.Rubro||''}`.toLowerCase();
-    return matchCat && (!q || searchStr.includes(q));
+    const matchTag = !currentTag || tagList(s).some(function(t){ return normTag(t) === currentTag; });
+    return matchCat && matchTag && (!q || searchStr.includes(q));
   });
   sortList();
   document.getElementById('visibleCount').textContent = filteredSocios.length;
