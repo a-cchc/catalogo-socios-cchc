@@ -106,17 +106,17 @@ nav{position:sticky;top:0;z-index:200;background:#fff;border-bottom:1px solid va
 
 /* ── CATEGORÍAS ── */
 .cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
-.cat-card{background:#fff;border:1px solid var(--gris-claro);border-left:4px solid var(--gris-claro);padding:20px 18px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:14px;transition:border-color .15s,box-shadow .15s,transform .15s;font:inherit;color:inherit;width:100%}
-.cat-card:hover{border-left-color:var(--azul);box-shadow:0 8px 22px rgba(0,40,90,.08);transform:translateY(-2px)}
-.cat-card.active{border-color:var(--azul);border-left-color:var(--rojo);background:var(--azul);color:#fff}
+.cat-card{background:#fff;border:1px solid var(--gris-claro);border-left:4px solid var(--cat,var(--gris-claro));padding:20px 18px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:14px;transition:border-color .15s,box-shadow .15s,transform .15s;font:inherit;color:inherit;width:100%}
+.cat-card:hover{box-shadow:0 8px 22px rgba(0,40,90,.08);transform:translateY(-2px)}
+.cat-card.active{border-color:var(--cat,var(--azul));border-left-color:var(--cat,var(--rojo));background:var(--cat,var(--azul));color:var(--ink,#fff)}
 .cat-icon{width:44px;height:44px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--azul-claro);color:var(--azul)}
 .cat-icon svg{width:22px;height:22px}
-.cat-card.active .cat-icon{background:rgba(255,255,255,.16);color:#fff}
+.cat-card.active .cat-icon{background:rgba(255,255,255,.16);color:var(--ink,#fff)}
 .cat-card h3{font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;line-height:1.25}
 .cat-count{font-size:13px;color:var(--gris-med);margin-top:2px}
 .cat-count strong{color:var(--rojo);font-weight:700}
-.cat-card.active .cat-count{color:rgba(255,255,255,.85)}
-.cat-card.active .cat-count strong{color:#fff}
+.cat-card.active .cat-count{color:var(--ink,rgba(255,255,255,.85))}
+.cat-card.active .cat-count strong{color:var(--ink,#fff)}
 
 /* ── BARRA DE FILTROS ── */
 .filter-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;padding:22px 0;margin-top:44px;border-top:1px solid var(--gris-claro);border-bottom:1px solid var(--gris-claro);position:sticky;top:76px;background:var(--fondo);z-index:50}
@@ -482,6 +482,14 @@ const CAT_COLORS = {
   'Contratista':'#0052A8', 'Consultora':'#3D3D3B', 'Distribuidor':'#E74100',
   'Educación Superior':'#0052A8', 'Socio Profesional':'#E74100', 'default':'#006EDC'
 };
+/* Color de la línea de cada tarjeta de categoría */
+const CAT_BAR = {
+  'todos':'#0066CC', 'Proveedor':'#FF5722', 'Constructora':'#1A56DB', 'Contratista':'#D97706',
+  'Distribuidor':'#0284C7', 'Inmobiliaria':'#EAB308', 'Consultora':'#7C3AED',
+  'Educación Superior':'#0D9488', 'Socio Profesional':'#475569'
+};
+/* Color del texto al seleccionar (amarillo necesita texto oscuro para leerse) */
+const CAT_INK = { 'Inmobiliaria':'#1A171B' };
 const CAT_ICONS = {
   'Constructora':'c-constructora','Inmobiliaria':'c-inmobiliaria','Proveedor':'c-proveedor',
   'Contratista':'c-contratista','Consultora':'c-consultora','Distribuidor':'c-distribuidor',
@@ -605,7 +613,7 @@ function buildCategoryGrid(cats) {
   const items = [{cat:'todos', count:allSocios.length}, ...cats.map(c => ({cat:c, count:allSocios.filter(s => hasCat(s, c)).length}))];
   document.getElementById('catGrid').innerHTML = items.map(it => {
     const label = it.cat === 'todos' ? 'Todos' : it.cat;
-    return `<button class="cat-card${it.cat===currentCat?' active':''}" data-cat="${esc(it.cat)}" type="button">
+    return `<button class="cat-card${it.cat===currentCat?' active':''}" data-cat="${esc(it.cat)}" style="--cat:${CAT_BAR[it.cat]||'#DADADA'};--ink:${CAT_INK[it.cat]||'#fff'}" type="button">
       <span class="cat-icon">${icon(CAT_ICONS[it.cat] || CAT_ICONS.default)}</span>
       <span><h3>${esc(label)}</h3><span class="cat-count"><strong>${it.count}</strong> socio${it.count!==1?'s':''}</span></span>
     </button>`;
