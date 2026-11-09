@@ -214,6 +214,15 @@ nav{position:sticky;top:0;z-index:200;background:#fff;border-bottom:1px solid va
 .modal-close{position:absolute;top:14px;right:14px;width:34px;height:34px;border:none;background:rgba(255,255,255,.14);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:2px}
 .modal-close:hover{background:rgba(255,255,255,.28)}
 .modal-close svg{width:16px;height:16px}
+/* Galería de imágenes referenciales (solo en la ficha) */
+.m-gallery{display:none;position:relative;aspect-ratio:16/9;overflow:hidden;background:var(--gris)}
+.m-gallery.on{display:block}
+.m-track{display:flex;height:100%;transition:transform .7s ease}
+.m-track img{flex:0 0 100%;width:100%;height:100%;object-fit:cover;display:block}
+.m-dots{position:absolute;left:0;right:0;bottom:12px;display:flex;justify-content:center;gap:8px}
+.m-dots button{width:10px;height:10px;padding:0;border:none;background:rgba(255,255,255,.6);cursor:pointer;transition:width .3s,background .3s}
+.m-dots button.act{width:26px;background:#fff}
+@media (prefers-reduced-motion:reduce){.m-track{transition:none}}
 .modal-body{padding:26px 32px 30px}
 .modal-desc{font-size:15px;color:#4A4C50;line-height:1.75;margin-bottom:22px;padding-left:16px;border-left:3px solid var(--azul)}
 .info-row{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid #EDEEF0;font-size:15px;color:var(--gris)}
@@ -443,6 +452,7 @@ footer{background:var(--azul);color:#fff;margin-top:20px}
       </div>
       <button class="modal-close" onclick="hideModal()" aria-label="Cerrar"><svg><use href="#i-close"/></svg></button>
     </div>
+    <div class="m-gallery" id="mGallery" aria-roledescription="carrusel" aria-label="Imágenes referenciales"></div>
     <div class="modal-body">
       <p class="modal-desc" id="mDesc"></p>
       <div class="info-row" id="mAddrRow"><svg><use href="#i-pin"/></svg><span id="mAddr"></span></div>
@@ -790,11 +800,61 @@ function openModal(s) {
   const wBtn = document.getElementById('mWebBtn');
   wBtn.style.display = s.Web ? '' : 'none'; wBtn.href = s.Web ? webUrl(s.Web) : '#';
   document.getElementById('modalOverlay').classList.add('open');
+  setupGallery(s);
   document.body.style.overflow = 'hidden';
   document.querySelector('.modal-close').focus();
 }
+
+/* ═══════════════ GALERÍA DE IMÁGENES (ficha) ═══════════════
+   Columna opcional "Imagenes" en la hoja: rutas separadas por coma o | 
+   (ej: img/aiep/aiep-1.webp, img/aiep/aiep-2.webp, img/aiep/aiep-3.webp)
+   PILOTO: mientras la hoja no tenga esa columna, AIEP usa las imágenes de GALLERY_PILOT. */
+const GALLERY_INTERVAL = 4000; // ms entre imágenes
+const GALLERY_PILOT = { 'aiep': ['img/aiep/aiep-1.webp', 'img/aiep/aiep-2.webp', 'img/aiep/aiep-3.webp'] };
+let galleryTimer = null, galleryIdx = 0, galleryCount = 0;
+function galleryImages(s) {
+  if (s.Imagenes) return s.Imagenes.split(/[,|]/).map(x => x.trim()).filter(Boolean);
+  const n = (s.Nombre || '').toLowerCase();
+  const k = Object.keys(GALLERY_PILOT).find(key => n.includes(key));
+  return k ? GALLERY_PILOT[k] : [];
+}
+function setupGallery(s) {
+  stopGallery();
+  const box = document.getElementById('mGallery');
+  const imgs = galleryImages(s);
+  box.onmouseenter = box.onmouseleave = null;
+  if (!imgs.length) { box.classList.remove('on'); box.innerHTML = ''; return; }
+  let h = '<div class="m-track">';
+  imgs.forEach((u, i) => { h += '<img src="' + esc(u) + '" alt="' + esc(s.Nombre || '') + ' – imagen ' + (i + 1) + '" loading="' + (i ? 'lazy' : 'eager') + '">'; });
+  h += '</div>';
+  if (imgs.length > 1) {
+    h += '<div class="m-dots">';
+    imgs.forEach((_, i) => { h += '<button type="button" data-i="' + i + '" aria-label="Ver imagen ' + (i + 1) + '"></button>'; });
+    h += '</div>';
+  }
+  box.innerHTML = h;
+  box.classList.add('on');
+  galleryCount = imgs.length;
+  goGallery(0);
+  if (imgs.length > 1) {
+    box.querySelectorAll('.m-dots button').forEach(b => b.addEventListener('click', () => { goGallery(+b.dataset.i); startGallery(); }));
+    box.onmouseenter = stopGallery;   // pausa al pasar el cursor
+    box.onmouseleave = startGallery;
+    startGallery();
+  }
+}
+function goGallery(i) {
+  galleryIdx = (i + galleryCount) % galleryCount;
+  const box = document.getElementById('mGallery');
+  const tr = box.querySelector('.m-track');
+  if (tr) tr.style.transform = 'translateX(-' + (galleryIdx * 100) + '%)';
+  box.querySelectorAll('.m-dots button').forEach((b, j) => b.classList.toggle('act', j === galleryIdx));
+}
+function startGallery() { clearInterval(galleryTimer); galleryTimer = setInterval(() => goGallery(galleryIdx + 1), GALLERY_INTERVAL); }
+function stopGallery() { clearInterval(galleryTimer); galleryTimer = null; }
 function hideModal() {
   document.getElementById('modalOverlay').classList.remove('open');
+  stopGallery();
   document.body.style.overflow = '';
   if (lastFocus) lastFocus.focus();
 }
