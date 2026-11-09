@@ -810,7 +810,7 @@ function openModal(s) {
    (ej: img/aiep/aiep-1.webp, img/aiep/aiep-2.webp, img/aiep/aiep-3.webp)
    PILOTO: mientras la hoja no tenga esa columna, AIEP usa las imágenes de GALLERY_PILOT. */
 const GALLERY_INTERVAL = 4000; // ms entre imágenes
-const GALLERY_PILOT = { 'aiep': ['img/aiep/aiep-1.webp', 'img/aiep/aiep-2.webp', 'img/aiep/aiep-3.webp'] };
+const GALLERY_PILOT = { 'aiep': ['img/aiep/aiep-1.webp', 'img/aiep/aiep-2.webp', 'img/aiep/aiep-3.webp', 'img/aiep/aiep-4.webp'] };
 let galleryTimer = null, galleryIdx = 0, galleryCount = 0;
 function galleryImages(s) {
   if (s.Imagenes) return s.Imagenes.split(/[,|]/).map(x => x.trim()).filter(Boolean);
