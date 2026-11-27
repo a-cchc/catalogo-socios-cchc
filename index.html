@@ -806,17 +806,62 @@ function openModal(s) {
 }
 
 /* ═══════════════ GALERÍA DE IMÁGENES (ficha) ═══════════════
-   Columna opcional "Imagenes" en la hoja: rutas separadas por coma o | 
-   (ej: img/aiep/aiep-1.webp, img/aiep/aiep-2.webp, img/aiep/aiep-3.webp)
-   PILOTO: mientras la hoja no tenga esa columna, AIEP usa las imágenes de GALLERY_PILOT. */
+   Cada socio con fotos aparece en GALLERY_SETS: 'Nombre tal como está en la hoja': ['carpeta', cantidad].
+   Las fotos viven en el repositorio como img/<carpeta>/<carpeta>-1.webp, <carpeta>-2.webp, ...
+   Opcional: una columna "Imagenes" en la hoja (rutas separadas por coma o |) reemplaza lo de esta lista. */
 const GALLERY_INTERVAL = 4000; // ms entre imágenes
-const GALLERY_PILOT = { 'aiep': ['img/aiep/aiep-1.webp', 'img/aiep/aiep-2.webp', 'img/aiep/aiep-3.webp', 'img/aiep/aiep-4.webp'] };
+const GALLERY_SETS = {
+  'AIEP': ['aiep', 5],
+  'Aitue': ['aitue', 16],
+  'Anmalú': ['anmalu', 6],
+  'Áridos Alcides Vidal': ['aridos-alcides-vidal', 9],
+  'Bagaro Maderas': ['bagaro-maderas', 6],
+  'BIM LAB': ['bim-lab', 3],
+  'CFT Santo Tomás': ['cft-santo-tomas', 5],
+  'Constructora CMG': ['constructora-cmg', 7],
+  'Constructora y Arriendo de Maquinaria DLG': ['dlg', 6],
+  'JR Construcciones': ['jr-construcciones', 3],
+  'Constructora Menpo': ['constructora-menpo', 4],
+  'Ottone Ingeniería y Construcciones': ['ottone', 8],
+  'Constructora Pesa': ['constructora-pesa', 4],
+  'Construmart': ['construmart', 5],
+  'Dadelco': ['dadelco', 5],
+  'Easy': ['easy', 5],
+  'Eco Escom': ['eco-escom', 7],
+  'Ecoserggo': ['ecoserggo', 3],
+  'FW Materiales': ['fw-materiales', 4],
+  'Constructora Hergu': ['constructora-hergu', 5],
+  'Hidrocentro': ['hidrocentro', 7],
+  'Hormibal': ['hormibal', 10],
+  'IC + Chile': ['ic-chile', 4],
+  'INACAP': ['inacap', 8],
+  'Inmobiliaria FG': ['inmobiliaria-fg', 3],
+  'Inmobiliaria IMY': ['inmobiliaria-imy', 5],
+  'Inmobiliaria Puerto Mayor': ['inmobiliaria-puerto-mayor', 4],
+  'Inmobiliaria Valle Verde': ['inmobiliaria-valle-verde', 3],
+  'IPVG': ['ipvg', 7],
+  'MCT': ['mct', 4],
+  'Mosaico': ['mosaico', 4],
+  'PROSIP': ['prosip', 8],
+  'Raigal': ['raigal', 9],
+  'Ríos San Martín': ['rios-san-martin', 4],
+  'Serviterra': ['serviterra', 8],
+  'Seryman': ['seryman', 8],
+  'Socomel': ['socomel', 4],
+  'Tecno Parischewsky': ['tecno-parischewsky', 11],
+  'Constructora José Miguel García': ['constructora-jose-miguel-garcia', 2],
+  'Huequecura': ['huequecura', 5],
+  'San Agustín': ['san-agustin', 5],
+  'Terraporta Propiedades': ['terraporta', 4],
+};
 let galleryTimer = null, galleryIdx = 0, galleryCount = 0;
 function galleryImages(s) {
   if (s.Imagenes) return s.Imagenes.split(/[,|]/).map(x => x.trim()).filter(Boolean);
-  const n = (s.Nombre || '').toLowerCase();
-  const k = Object.keys(GALLERY_PILOT).find(key => n.includes(key));
-  return k ? GALLERY_PILOT[k] : [];
+  const set = GALLERY_SETS[(s.Nombre || '').normalize('NFC').trim()];
+  if (!set) return [];
+  const out = [];
+  for (let i = 1; i <= set[1]; i++) out.push('img/' + set[0] + '/' + set[0] + '-' + i + '.webp');
+  return out;
 }
 function setupGallery(s) {
   stopGallery();
